@@ -109,7 +109,10 @@ public class CalendarDialog extends Dialog {
 				if (newInstance) {
 					calendar.addEntry(dialogEntry.updateEntry());
 				} else {
-					calendar.updateEntry(dialogEntry.updateEntry());
+					calendar.removeEntries(dialogEntry.getEntry());
+					calendar.addEntry(dialogEntry.updateEntry());
+					
+					//alendar.updateEntry(dialogEntry.updateEntry());
 				}
 			}
 			close();
@@ -217,6 +220,7 @@ public class CalendarDialog extends Dialog {
 		private Set<DayOfWeek> recurringDays;
 		private Timezone timezone;
 		private MyEntry entry;
+		private String colorDone;
 
 		public String getId() {
 			return id;
@@ -314,6 +318,21 @@ public class CalendarDialog extends Dialog {
 			this.entry = entry;
 		}
 
+		public String getColorDone() {
+			if(isDone()) {
+				colorDone ="green";
+			}
+			else {
+				colorDone ="red";
+			}
+			
+			return colorDone;
+		}
+
+		public void setColorDone(String colorDone) {
+			this.colorDone = colorDone;
+		}
+
 		public static DialogEntry of(MyEntry entry, Timezone timezone) {
 			DialogEntry dialogEntry = new DialogEntry();
 
@@ -325,6 +344,7 @@ public class CalendarDialog extends Dialog {
 			dialogEntry.setDescription(entry.getDescription());
 			dialogEntry.setAllDay(entry.isAllDay());
 			dialogEntry.setDone(entry.isDone());
+			dialogEntry.setColorDone(entry.getColorDone());
 
 			boolean recurring = entry.isRecurring();
 			dialogEntry.setRecurring(recurring);
@@ -347,13 +367,14 @@ public class CalendarDialog extends Dialog {
 		 *
 		 * @return entry instnace
 		 */
-		private Entry updateEntry() {
+		private MyEntry updateEntry() {
 			entry.setTitle(title);
 			entry.setColor(color);
 			entry.setDescription(description);
 			entry.setAllDay(allDay);
 			entry.setRecurring(recurring);
 			entry.setDone(done);
+			entry.setColorDone(colorDone);
 
 			if (recurring) {
 				entry.setRecurringDaysOfWeeks(getRecurringDays());

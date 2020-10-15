@@ -2,39 +2,30 @@ package com.example.application.views.calendar;
 
 import com.vaadin.flow.component.Component;
 import com.vaadin.flow.component.HasText;
-import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Div;
-import com.vaadin.flow.component.html.NativeButton;
 import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
-import com.vaadin.flow.component.orderedlayout.FlexComponent.Alignment;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import org.springframework.lang.Nullable;
 import org.vaadin.stefan.fullcalendar.*;
-
-import com.example.application.views.calendar.CalendarDialog;
 import com.example.application.views.main.MainView;
-
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @PageTitle("Calendar")
 @Route(value = "calendar", layout = MainView.class)
@@ -42,22 +33,21 @@ import java.util.stream.IntStream;
 public class CalendarDemo extends Div {
 
 	// componenti
-	private static final String[] COLORS = { "tomato", "orange", "dodgerblue", "mediumseagreen", "gray", "slateblue", "violet" };
+	private static final String[] COLORS = { "tomato", "orange", "dodgerblue", "mediumseagreen", "gray", "slateblue",
+			"violet" };
 	private FullCalendar calendar;
 	private ComboBox<CalendarView> comboBoxView;
 	private Button buttonDatePicker;
 	private HorizontalLayout toolbar;
 	private ComboBox<Timezone> timezoneComboBox;
 
-
-	
 	public CalendarDemo() {
 		setClassName("container");
-		
+
 		createToolbar();
 		createCalendarInstance();
-		
-		add(toolbar,calendar);
+
+		add(toolbar, calendar);
 		createTestEntries(calendar);
 	}
 
@@ -66,6 +56,7 @@ public class CalendarDemo extends Div {
 		Button buttonToday = new Button("", VaadinIcon.HOME.create(), e -> calendar.today());
 		Button buttonPrevious = new Button("", VaadinIcon.ANGLE_LEFT.create(), e -> calendar.previous());
 		Button buttonNext = new Button("", VaadinIcon.ANGLE_RIGHT.create(), e -> calendar.next());
+
 		
 		// simulate the date picker light that we can use in polymer
 		DatePicker gotoDate = new DatePicker();
@@ -77,21 +68,24 @@ public class CalendarDemo extends Div {
 		gotoDate.setWeekNumbersVisible(true);
 		buttonDatePicker = new Button(VaadinIcon.CALENDAR.create());
 		buttonDatePicker.getElement().appendChild(gotoDate.getElement());
+		
 		// quando clicco il bottone apro il mio datepicker
 		buttonDatePicker.addClickListener(event -> gotoDate.open());
 
+		
 		// inserisco le varie viste in una lista -> con filtro sort per ogni nome
 		List<CalendarView> calendarViews = new ArrayList<>(Arrays.asList(CalendarViewImpl.values()));
 		calendarViews.addAll(Arrays.asList(SchedulerView.values()));
 		calendarViews.sort(Comparator.comparing(CalendarView::getName));
 
+		
 		// combobox in base alle variabili contenute in calendarViews DEFAULT : MONTH
 		comboBoxView = new ComboBox<>("", calendarViews);
+		
 		// setto di default il contenuto della combo a DAY_GRID_MONTH
 		comboBoxView.setValue(CalendarViewImpl.DAY_GRID_MONTH);
-//		comboBoxView.setWidth("25%");
-		// quando seleziono una vista differente la modifico, se null torno a quella di
-		// default
+
+		// quando seleziono una vista differente la modifico, se null torno a quella di default
 		comboBoxView.addValueChangeListener(e -> {
 			CalendarView value = e.getValue();
 			calendar.changeView(value == null ? CalendarViewImpl.DAY_GRID_MONTH : value);
@@ -100,7 +94,6 @@ public class CalendarDemo extends Div {
 		// gestione della lingua
 		List<Locale> items = Arrays.asList(CalendarLocale.getAvailableLocales());
 		ComboBox<Locale> comboBoxLocales = new ComboBox<>();
-//		comboBoxLocales.setWidth("10%");
 		comboBoxLocales.setItems(items);
 		comboBoxLocales.setValue(CalendarLocale.getDefault());
 		comboBoxLocales.addValueChangeListener(event -> calendar.setLocale(event.getValue()));
@@ -123,20 +116,17 @@ public class CalendarDemo extends Div {
 		Button removeAllResources = new Button("R", VaadinIcon.TRASH.create(),
 				event -> ((FullCalendarScheduler) calendar).removeAllResources());
 
-//		buttonDatePicker.setWidth("25%");
-
-		toolbar = new HorizontalLayout();
-
-		toolbar.setClassName("toolbar");
 		
+		toolbar = new HorizontalLayout();
+		toolbar.setClassName("toolbar");
 
 		// addThousand
-		toolbar.add(buttonToday, buttonPrevious, buttonNext, buttonDatePicker, 
-							   comboBoxView, comboBoxLocales, removeAllEntries, removeAllResources);
+		toolbar.add(buttonToday, buttonPrevious, buttonNext, buttonDatePicker, comboBoxView, comboBoxLocales,
+				removeAllEntries, removeAllResources);
 		toolbar.expand(buttonPrevious);
 		toolbar.expand(buttonNext);
 		Optional.ofNullable(timezoneComboBox).ifPresent(toolbar::add);
-		
+
 		return toolbar;
 	}
 
@@ -144,7 +134,24 @@ public class CalendarDemo extends Div {
 		calendar = FullCalendarBuilder.create().withAutoBrowserTimezone().withEntryLimit(3).withScheduler().build();
 
 		calendar.setClassName("calendar");
-		
+
+		calendar.setEntryRenderCallback("" + "function(info) {" + "console.log(info.event.title + 'X');"
+				+ "console.log(info.event.extendedProps);" + "console.log('done: ' +info.event.extendedProps.done);"
+				+ "console.log('color: ' +info.event.extendedProps.colorDone);"
+				+ "var newDiv = document.createElement('div'); "
+				+ "info.el.firstChild.insertAdjacentHTML('afterbegin', '<Span  style=\""
+				+ "background-color:white;color:red;"
+				+ "display:inline-flex;align-items:center;" + "border-radius:3px;width:16px;height:16px;"
+				+ "margin:3px;"
+				+ "\">" 
+				+ "<span style=\""
+				+ "background-color:' + info.event.extendedProps.colorDone + '; border-radius:50%; width:10px; height:10px; "
+				+ "display:inline;" 
+				+ "margin:3px;"
+				+ "\">" 
+				+ "</span></span>'); "
+				+ "   return info.el; " + "}");
+
 		((FullCalendarScheduler) calendar).setSchedulerLicenseKey("GPL-My-Project-Is-Open-Source");
 
 		calendar.setFirstDay(DayOfWeek.MONDAY);
@@ -182,11 +189,11 @@ public class CalendarDemo extends Div {
 		});
 		calendar.addEntryResizedListener(event -> System.out.println(event.applyChangesOnEntry()));
 
-		//apro la form riguardante la entry selezionata
+		// apro la form riguardante la entry selezionata
 		calendar.addEntryClickedListener(
 				event -> new CalendarDialog(calendar, (MyEntry) event.getEntry(), false).open());
 
-		//creo una nuova entry in una qualunque cella
+		// creo una nuova entry in una qualunque cella
 		((FullCalendarScheduler) calendar).addTimeslotsSelectedSchedulerListener((event) -> {
 			MyEntry entry = new MyEntry();
 
@@ -194,13 +201,13 @@ public class CalendarDemo extends Div {
 			entry.setEnd(event.getEndDateTimeUTC());
 			entry.setAllDay(event.isAllDay());
 			entry.setColor("dodgerblue");
-			//instanzio un dialog = form connesso alla cella selezionata
+			// instanzio un dialog = form connesso alla cella selezionata
 			new CalendarDialog(calendar, entry, true).open();
 		});
 
-		//aggiungo più entità rispetto al limite = 3
+		// aggiungo più entità rispetto al limite = 3
 		calendar.addLimitedEntriesClickedListener(event -> {
-			Collection <Entry> entries = calendar.getEntries(event.getClickedDate());
+			Collection<Entry> entries = calendar.getEntries(event.getClickedDate());
 			if (!entries.isEmpty()) {
 				Dialog dialog = new Dialog();
 				VerticalLayout dialogLayout = new VerticalLayout();
@@ -209,23 +216,29 @@ public class CalendarDemo extends Div {
 				dialogLayout.setMargin(false);
 				dialogLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.STRETCH);
 
-								
-				//mostro all'utente il numero di entries in tal giorno/giorni
-				dialogLayout.add(new Span("Entries of " + event.getClickedDate()));
-				
+				// mostro all'utente il numero di entries in tal giorno/giorni
+				Span spanEntries = new Span("Entries of " + event.getClickedDate());
+				spanEntries.setId("span-entries");
+				dialogLayout.add(spanEntries);
+
 				entries.stream().sorted(Comparator.comparing(Entry::getTitle)).map(entry -> {
-					//una volta cliccato il bottone mostro il dettaglio della entry con la sua form solita
-					Button button = new Button(entry.getTitle(),
-							//apro il dialogo con una instanza già creata, quindi i campi sono pre compilati
+					// una volta cliccato il bottone mostro il dettaglio della entry con la sua form
+					// solita
+
+					Icon dot = new Icon(VaadinIcon.CIRCLE);
+					Button button = new Button(entry.getTitle(), dot,
+							// apro il dialogo con una instanza già creata, quindi i campi sono pre
+							// compilati
 							clickEvent -> new CalendarDialog(calendar, (MyEntry) entry, false).open());
 					Style style = button.getStyle();
-					 
-//					styleIcon.set("color", "black" );
-					style.set("background-color", "lightgrey");
-					style.set("color", Optional.ofNullable(entry.getColor()).orElse("rgb(58, 135, 173)"));
+
+					dot.setColor(((MyEntry) entry).getColorDone());
+					dot.setSize("20px");
+					style.set("background-color", Optional.ofNullable(entry.getColor()).orElse("rgb(58, 135, 173)"));
+					style.set("color", "white");
 					style.set("border-radius", "3px");
-					style.set("text-align", "left");
 					style.set("margin", "1px");
+
 					return button;
 				}).forEach(dialogLayout::add);
 
@@ -270,55 +283,56 @@ public class CalendarDemo extends Div {
 		computerRoom2.addChildren(computerRoom2Children);
 		((Scheduler) calendar).addResources(computerRoom2Children);
 
-		createTimedEntry(calendar, "Kickoff meeting with customer #1", now.withDayOfMonth(3).atTime(10, 0), 120, null, false,
-				meetingRoomBlue, meetingRoomGreen, meetingRoomRed);
-		createTimedBackgroundEntry(calendar, now.withDayOfMonth(3).atTime(10, 0), 120, null, false,
-				meetingRoomBlue, meetingRoomGreen, meetingRoomRed);
+		createTimedEntry(calendar, "Kickoff meeting with customer #1", now.withDayOfMonth(3).atTime(10, 0), 120, null,
+				false, meetingRoomBlue, meetingRoomGreen, meetingRoomRed);
+		createTimedBackgroundEntry(calendar, now.withDayOfMonth(3).atTime(10, 0), 120, null, false, meetingRoomBlue,
+				meetingRoomGreen, meetingRoomRed);
 		createTimedEntry(calendar, "Kickoff meeting with customer #2", now.withDayOfMonth(7).atTime(11, 30), 120,
-				"mediumseagreen",false, meetingRoomRed);
+				"mediumseagreen", false, meetingRoomRed);
 		createTimedEntry(calendar, "Kickoff meeting with customer #3", now.withDayOfMonth(12).atTime(9, 0), 120,
-				"mediumseagreen",false, meetingRoomGreen);
+				"mediumseagreen", false, meetingRoomGreen);
 		createTimedEntry(calendar, "Kickoff meeting with customer #4", now.withDayOfMonth(13).atTime(10, 0), 120,
-				"mediumseagreen",false, meetingRoomGreen);
+				"mediumseagreen", false, meetingRoomGreen);
 		createTimedEntry(calendar, "Kickoff meeting with customer #5", now.withDayOfMonth(17).atTime(11, 30), 120,
-				"mediumseagreen",false, meetingRoomBlue);
+				"mediumseagreen", false, meetingRoomBlue);
 		createTimedEntry(calendar, "Kickoff meeting with customer #6", now.withDayOfMonth(22).atTime(9, 0), 120,
-				"mediumseagreen",false, meetingRoomRed);
+				"mediumseagreen", false, meetingRoomRed);
 
-		createTimedEntry(calendar, "Kickoff meeting with customer #1", now.withDayOfMonth(3).atTime(10, 0), 120, null,false);
-		createTimedBackgroundEntry(calendar, now.withDayOfMonth(3).atTime(10, 0), 120, null,false);
+		createTimedEntry(calendar, "Kickoff meeting with customer #1", now.withDayOfMonth(3).atTime(10, 0), 120, null,
+				false);
+		createTimedBackgroundEntry(calendar, now.withDayOfMonth(3).atTime(10, 0), 120, null, false);
 		createTimedEntry(calendar, "Kickoff meeting with customer #2", now.withDayOfMonth(7).atTime(11, 30), 120,
-				"mediumseagreen",false);
+				"mediumseagreen", false);
 		createTimedEntry(calendar, "Kickoff meeting with customer #3", now.withDayOfMonth(12).atTime(9, 0), 120,
-				"mediumseagreen",false);
+				"mediumseagreen", false);
 		createTimedEntry(calendar, "Kickoff meeting with customer #4", now.withDayOfMonth(13).atTime(10, 0), 120,
-				"mediumseagreen",false);
+				"mediumseagreen", false);
 		createTimedEntry(calendar, "Kickoff meeting with customer #5", now.withDayOfMonth(17).atTime(11, 30), 120,
-				"mediumseagreen",false);
+				"mediumseagreen", false);
 		createTimedEntry(calendar, "Kickoff meeting with customer #6", now.withDayOfMonth(22).atTime(9, 0), 120,
-				"mediumseagreen",false);
+				"mediumseagreen", false);
 
-		createTimedEntry(calendar, "Grocery Store", now.withDayOfMonth(7).atTime(17, 30), 45, "violet",false);
-		createTimedEntry(calendar, "Dentist", now.withDayOfMonth(20).atTime(11, 30), 60, "violet",false);
-		createTimedEntry(calendar, "Cinema", now.withDayOfMonth(10).atTime(20, 30), 140, "dodgerblue",false);
-		createDayEntry(calendar, "Short trip", now.withDayOfMonth(17), 2, "dodgerblue" ,false);
-		createDayEntry(calendar, "John's Birthday", now.withDayOfMonth(23), 1, "gray"  ,true);
-		createDayEntry(calendar, "This special holiday", now.withDayOfMonth(4), 1, "gray" ,false);
+		createTimedEntry(calendar, "Grocery Store", now.withDayOfMonth(7).atTime(17, 30), 45, "violet", false);
+		createTimedEntry(calendar, "Dentist", now.withDayOfMonth(20).atTime(11, 30), 60, "violet", false);
+		createTimedEntry(calendar, "Cinema", now.withDayOfMonth(10).atTime(20, 30), 140, "dodgerblue", false);
+		createDayEntry(calendar, "Short trip", now.withDayOfMonth(17), 2, "dodgerblue", false);
+		createDayEntry(calendar, "John's Birthday", now.withDayOfMonth(23), 1, "gray", true);
+		createDayEntry(calendar, "This special holiday", now.withDayOfMonth(4), 1, "gray", false);
 
-		createDayEntry(calendar, "Multi 1", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 2", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 3", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 4", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 5", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 6", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 7", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 8", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 9", now.withDayOfMonth(12), 2, "tomato",true);
-		createDayEntry(calendar, "Multi 10", now.withDayOfMonth(12), 2, "tomato",true);
+		createDayEntry(calendar, "Multi 1", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 2", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 3", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 4", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 5", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 6", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 7", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 8", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 9", now.withDayOfMonth(12), 2, "tomato", true);
+		createDayEntry(calendar, "Multi 10", now.withDayOfMonth(12), 2, "tomato", true);
 
-//		createDayBackgroundEntry(calendar, now.withDayOfMonth(4), 6, "#B9FFC3");
-//		createDayBackgroundEntry(calendar, now.withDayOfMonth(19), 2, "#CEE3FF");
-//		createTimedBackgroundEntry(calendar, now.withDayOfMonth(20).atTime(11, 0), 150, "#FBC8FF");
+		createDayBackgroundEntry(calendar, now.withDayOfMonth(4), 6, "#B9FFC3",true);
+		createDayBackgroundEntry(calendar, now.withDayOfMonth(19), 2, "#CEE3FF",false);
+		createTimedBackgroundEntry(calendar, now.withDayOfMonth(20).atTime(11, 0), 150, "#FBC8FF",true);
 
 		createRecurringEvents(calendar);
 	}
@@ -341,15 +355,17 @@ public class CalendarDemo extends Div {
 		calendar.addEntry(recurring);
 	}
 
-	static void createDayEntry(FullCalendar calendar, String title, LocalDate start, int days, String color,boolean done) {
+	static void createDayEntry(FullCalendar calendar, String title, LocalDate start, int days, String color,
+			boolean done) {
 		MyEntry entry = new MyEntry();
 		setValues(calendar, entry, title, start.atStartOfDay(), days, ChronoUnit.DAYS, color, done);
-		
+
 		entry.setEditable(true);
 		calendar.addEntry(entry);
 	}
 
-	static void createTimedEntry(FullCalendar calendar, String title, LocalDateTime start, int minutes, String color,boolean done) {
+	static void createTimedEntry(FullCalendar calendar, String title, LocalDateTime start, int minutes, String color,
+			boolean done) {
 		MyEntry entry = new MyEntry();
 		setValues(calendar, entry, title, start, minutes, ChronoUnit.MINUTES, color, done);
 
@@ -357,113 +373,37 @@ public class CalendarDemo extends Div {
 		calendar.addEntry(entry);
 	}
 
-	static void createDayBackgroundEntry(FullCalendar calendar, LocalDate start, int days, String color, boolean done) {
+	static void createDayBackgroundEntry(FullCalendar calendar, LocalDate start, int days, String color,  boolean done) {
 		MyEntry entry = new MyEntry();
-		
-		setValues(calendar, entry, "BG", start.atStartOfDay(), days, ChronoUnit.DAYS, color,done);
-//		System.out.println("name: "+entry.getTitle()+" done: "+entry.isDone());
-		
-//		 The given string will be interpreted as js function on client side
-//		 and attached as eventRender callback. 
-//		 Make sure, that it does not contain any harmful code.
-		
-		String doneColor="";
-		if(done) {
-			doneColor="green";
-			System.out.println("green selected");
-		}else {
-			doneColor="red";
-			System.out.println("red selected");
-		}
-		
-		calendar.setEntryRenderCallback("" +
-			"function(info) {" +
-		        "   console.log(info.event.title + 'X');" +
-		        " 	var newDiv = document.createElement('div'); " +
-		        " 	info.el.firstChild.insertAdjacentHTML('afterbegin', '<Span  style="
 
-		        + "background-color:white;color:red;"
-//		        + "display:inline-block;"
-		        + "display:inline-flex;align-items:center;"
-		        + "margin:3px;"
-//		        + "padding:3px;"
-				+ "border-radius:3px;width:16px;height:16px;"
-		        + ">"
-		        + "<span style="
-		        + "background-color:"+doneColor+";"
-		        + "border-radius:50%;width:10px;height:10px;"
-		        + "display:inline;"
-//				+ "margin-left:3px;margin-right:3px;"
-				+ "margin:3px;"
-				+ ">"
-		        + "</span></span>'); " +
-		        "   return info.el; " +
-		        "}"
-		);
+		setValues(calendar, entry, "BG", start.atStartOfDay(), days, ChronoUnit.DAYS, color, done);
+
 		entry.setEditable(true);
 
 		calendar.addEntry(entry);
 	}
 
-	static void createTimedBackgroundEntry(FullCalendar calendar, LocalDateTime start, int minutes, String color, boolean done) {
+	static void createTimedBackgroundEntry(FullCalendar calendar, LocalDateTime start, int minutes, String color,  boolean done) {
 		MyEntry entry = new MyEntry();
-		
-		setValues(calendar, entry, "BG", start, minutes, ChronoUnit.MINUTES, color,done);
-//		System.out.println("name: "+entry.getTitle()+" done: "+entry.isDone());
-//		entry.setRenderingMode(Entry.RenderingMode.BACKGROUND);
-		
-//		 The given string will be interpreted as js function on client side
-//		 and attached as eventRender callback. 
-//		 Make sure, that it does not contain any harmful code.
-		
-		String doneColor="";
-		if(done) {
-			doneColor="green";
-		}else {
-			doneColor="orange";
-		}
-		
-		calendar.setEntryRenderCallback("" +
-				"function(info) {" +
-		        "   console.log(info.event.title + 'X');" +
-		        " 	var newDiv = document.createElement('div'); " +
-		        " 	info.el.firstChild.insertAdjacentHTML('afterbegin', '<Span  style="
 
-		        + "background-color:white;color:red;"
-//		        + "display:inline-block;"
-		        + "display:inline-flex;align-items:center;"
-		        + "border-radius:3px;width:16px;height:16px;"
-		        + "margin:3px;"
-//		        + "padding:3px;"
-		        + ">"
-		        + "<span style="
-		        + "background-color:"+doneColor+";"
-		        + "border-radius:50%;width:10px;height:10px;"
-		        + "display:inline;"
-//				+ "margin-left:3px;margin-right:3px;"
-		        + "margin:3px;"
-				+ ">"
-//		        + "display:inline-block;>"
-		        + "</span></span>'); " +
-		        "   return info.el; " +
-		        "}"
-		);
+		setValues(calendar, entry, "BG", start, minutes, ChronoUnit.MINUTES, color, done);
+
 		entry.setEditable(true);
 
 		calendar.addEntry(entry);
 	}
 
 	static void setValues(FullCalendar calendar, MyEntry entry, String title, LocalDateTime start, int amountToAdd,
-			ChronoUnit unit, String color, boolean done) {
+			ChronoUnit unit, String color,  boolean done) {
 		entry.setTitle(title);
 		entry.setStart(start, calendar.getTimezone());
 		entry.setEnd(entry.getStartUTC().plus(amountToAdd, unit));
 		entry.setAllDay(unit == ChronoUnit.DAYS);
 		entry.setColor(color);
 		entry.setDone(done);
-		System.out.println("name: "+entry.getTitle()+" done: "+entry.isDone());
-	}
 
+	}
+	
 //	static void setValues(FullCalendar calendar, MyEntry entry, String title, LocalDateTime start,
 //			int amountToAdd, ChronoUnit unit, String color, boolean done) {
 //		entry.setTitle(title);
@@ -485,10 +425,10 @@ public class CalendarDemo extends Div {
 		return resource;
 	}
 
-	static void createTimedEntry(FullCalendar calendar, String title, LocalDateTime start, int minutes, String color, boolean done,
-			Resource... resources) {
+	static void createTimedEntry(FullCalendar calendar, String title, LocalDateTime start, int minutes, String color,
+			boolean done, Resource... resources) {
 		MyEntry entry = new MyEntry();
-		setValues(calendar, entry, title, start, minutes, ChronoUnit.MINUTES, color,done);
+		setValues(calendar, entry, title, start, minutes, ChronoUnit.MINUTES, color, done);
 		if (resources != null && resources.length > 0) {
 			entry.assignResources(Arrays.asList(resources));
 		}
@@ -496,45 +436,12 @@ public class CalendarDemo extends Div {
 		calendar.addEntry(entry);
 	}
 
-	static void createTimedBackgroundEntry(FullCalendar calendar, LocalDateTime start, int minutes, String color, boolean done,
-			Resource... resources) {
+	static void createTimedBackgroundEntry(FullCalendar calendar, LocalDateTime start, int minutes, String color,
+			@Nullable boolean done, Resource... resources) {
 		MyEntry entry = new MyEntry();
-		setValues(calendar, entry, "BG", start, minutes, ChronoUnit.MINUTES, color,done);
-//		System.out.println("name: "+entry.getTitle()+" done: "+entry.isDone());
-		
-		String doneColor="";
-		if(done) {
-			doneColor="orange";
-		}else {
-			doneColor="red";
-		}
-		
-//		entry.setRenderingMode(Entry.RenderingMode.BACKGROUND);
-		calendar.setEntryRenderCallback("" +
-				"function(info) {" +
-		        "   console.log(info.event.title + 'X');" +
-		        " 	var newDiv = document.createElement('div'); " +
-		        " 	info.el.firstChild.insertAdjacentHTML('afterbegin', '<Span  style="
 
-		        + "background-color:white;color:red;"
-//		        + "display:inline-block;"
-		        + "display:inline-flex;align-items:center;"
-		        + "border-radius:3px;width:16px;height:16px;"
-		        + "margin:3px;"
-//		        + "padding:3px;"
-		        + ">"
-		        + "<span style="
-		        + "background-color:"+doneColor+";"
-		        + "border-radius:50%;width:10px;height:10px;"
-//		        + "display:inline-block>"
-				+ "display:inline;"
-		        + "margin:3px;"
-//				+ "margin-left:3px;margin-right:3px;"
-				+ ">"
-		        + "</span></span>'); " +
-		        "   return info.el; " +
-		        "}"
-			);
+		setValues(calendar, entry, "BG", start, minutes, ChronoUnit.MINUTES, color, done);
+
 		if (resources != null && resources.length > 0) {
 			entry.assignResources(Arrays.asList(resources));
 		}
