@@ -41,7 +41,8 @@ public class CalendarDialog extends Dialog {
 		setCloseOnEsc(true);
 		setCloseOnOutsideClick(true);
 
-		setWidth("500px");
+		setWidth("550px");
+		
 
 		// init fields
 
@@ -59,7 +60,8 @@ public class CalendarDialog extends Dialog {
 
 		fieldStart = new CustomDateTimePicker("Start");
 		fieldEnd = new CustomDateTimePicker("End");
-
+		
+		
 		boolean allDay = dialogEntry.allDay;
 		fieldStart.setDateOnly(allDay);
 		fieldEnd.setDateOnly(allDay);
@@ -123,14 +125,15 @@ public class CalendarDialog extends Dialog {
 		buttonCancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
 		HorizontalLayout buttons = new HorizontalLayout(buttonSave, buttonCancel);
-
+		
+		
 		if (!newInstance) {
 			Button buttonRemove = new Button("Remove", e -> {
 				calendar.removeEntry(entry);
 				close();
 			});
 			buttonRemove.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-			buttons.add(buttonRemove);
+			buttons.add(buttonRemove);	
 		}
 
 		// TODO add resource assignment widget
@@ -139,12 +142,17 @@ public class CalendarDialog extends Dialog {
 
 		VerticalLayout mainLayout = new VerticalLayout(fieldTitle, fieldColor, fieldDescription,
 				new HorizontalLayout(fieldAllDay, fieldRecurring), fieldStart, fieldEnd, infoEnd, fieldRDays,done);
-
+		
+		
 		mainLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.STRETCH);
 		mainLayout.setSizeFull();
-
+		mainLayout.getStyle().set("padding", "15px");
+		
 		mainLayout.getElement().getStyle().set("overflow-y", "auto");
+		
 
+		buttons.getStyle().set("padding-left", "20px");
+		buttons.getStyle().set("margin-bottom", "20px");
 		add(mainLayout, buttons);
 
 		// additional layout init

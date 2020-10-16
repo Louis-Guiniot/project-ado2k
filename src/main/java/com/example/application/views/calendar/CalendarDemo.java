@@ -226,12 +226,13 @@ public class CalendarDemo extends Div {
 					// solita
 
 					Icon dot = new Icon(VaadinIcon.CIRCLE);
-					Button button = new Button(entry.getTitle(), dot,
-							// apro il dialogo con una instanza già creata, quindi i campi sono pre
-							// compilati
+					dot.setId("dot");
+					
+					Button button = new Button(entry.getTitle(), dot, 
 							clickEvent -> new CalendarDialog(calendar, (MyEntry) entry, false).open());
+					
 					Style style = button.getStyle();
-
+					button.setId("entry-btn");
 					dot.setColor(((MyEntry) entry).getColorDone());
 					dot.setSize("20px");
 					style.set("background-color", Optional.ofNullable(entry.getColor()).orElse("rgb(58, 135, 173)"));

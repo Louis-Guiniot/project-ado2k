@@ -1,18 +1,24 @@
 .container{	
 	box-shadow: var(--lumo-box-shadow-xl);
-	border-radius: 0px;
+	border-radius: var(--lumo-border-radius-l);
 	margin-top:2%;
 	margin-left: auto;
 	margin-right: auto;
 	width: 90%;
 	padding:2%;
 }
-
 .toolbar{
 	margin-bottom:2%;
 	margin-top:0;
 }
 #span-entries{
 	margin-bottom:10px;
+}
+#dot{
+	margin-left:o;
+}
+
+#entry-btn{
+	text-align:left;
 }
 

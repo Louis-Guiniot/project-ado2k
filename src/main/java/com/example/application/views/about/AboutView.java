@@ -131,7 +131,7 @@ public class AboutView extends Div {
 		HorizontalLayout buttonLayout = new HorizontalLayout();
 		HorizontalLayout labelHeader = new HorizontalLayout();
 		
-		Icon vLogo = new Icon(VaadinIcon.VAADIN_V);
+		Icon vLogo = new Icon(VaadinIcon.VAADIN_H);
 		Icon compressIcon = new Icon(VaadinIcon.COMPRESS_SQUARE);
 				
 		// define id e class HTML
@@ -174,7 +174,6 @@ public class AboutView extends Div {
 		// build layout header, add label
 		Label header = new Label("Informations form");
 		labelHeader.add(vLogo,header,compressIcon);
-		labelHeader.expand(header);
 		labelHeader.setClassName("header-label");
 		labelHeader.setSizeFull();
 
