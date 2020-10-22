@@ -36,6 +36,7 @@ import com.vaadin.flow.component.textfield.TextField;
 import com.vaadin.flow.data.binder.Binder;
 import com.vaadin.flow.data.binder.RequiredFieldConfigurator;
 import com.vaadin.flow.data.converter.StringToIntegerConverter;
+import com.vaadin.flow.data.validator.StringLengthValidator;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.VaadinRequest;
@@ -67,6 +68,7 @@ public class AboutView extends Div {
 	private Button save = new Button(new Icon (VaadinIcon.CHECK));
 	
 	private PersonService service = new PersonService();
+	private Person person = new Person();
 	private Binder<Person> binder = new Binder<>(Person.class);
 	
 	public AboutView() {
@@ -152,8 +154,11 @@ public class AboutView extends Div {
 		buttonLayout.addClassName("button-layout");
 		save.setId("save-btn");
 		cancel.setId("cancel-btn");
-		vLogo.setId("icon");
-		compressIcon.setId("icon");
+		
+		vLogo.setId("vLogo");
+		compressIcon.setId("compressLogo");
+		vLogo.setClassName("icon");
+		compressIcon.setClassName("icon");
 
 		// setting responsive adapter
 		formLayout.setResponsiveSteps(new ResponsiveStep("45em", 1), new ResponsiveStep("60em", 3));
@@ -176,6 +181,7 @@ public class AboutView extends Div {
 		labelHeader.add(vLogo,header,compressIcon);
 		labelHeader.setClassName("header-label");
 		labelHeader.setSizeFull();
+		labelHeader.setSpacing(false);
 
 		// build layout persona, add field , span and label
 		email.setHelperText("insert your email");
@@ -218,9 +224,24 @@ public class AboutView extends Div {
 
 		// add the form container to a vertical layout
 		box.add(labelHeader, formLayout, buttonLayout);
-	
-		binder.bindInstanceFields(this);
-	
+		box.setWidth("90%");
+		
+		binder.bind(firstName,Person::getFirstName, Person::setFirstName);
+		binder.bind(lastName, Person::getLastName, Person::setLastName);
+		binder.bind(email, Person::getEmail, Person::setEmail);
+		binder.bind(phone, Person::getPhone, Person::setPhone);
+		binder.bind(dateOfBirth, Person::getDateOfBirth, Person::setDateOfBirth);
+		binder.bind(occupation, Person::getOccupation, Person::setOccupation);
+		binder.bind(gender,Person::getGender, Person::setGender);
+		binder.bind(mobile, Person::getMobile, Person::setMobile);
+		binder.bind(address, Person::getAddress, Person::setAddress);
+		binder.bind(road, Person::getRoad, Person::setRoad);
+		binder.bind(city, Person::getCity, Person::setCity);
+		binder.bind(cap, Person::getCap, Person::setCap);
+		binder.bind(province, Person::getProvince, Person::setProvince);
+		
+		binder.setBean(person);
+		
 		return box;
 	}
 }

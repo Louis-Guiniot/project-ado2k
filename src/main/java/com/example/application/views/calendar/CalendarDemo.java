@@ -18,6 +18,7 @@ import com.vaadin.flow.dom.Style;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 
+import org.apache.coyote.CloseNowException;
 import org.springframework.lang.Nullable;
 import org.vaadin.stefan.fullcalendar.*;
 import com.example.application.views.main.MainView;
@@ -30,7 +31,7 @@ import java.util.*;
 @PageTitle("Calendar")
 @Route(value = "calendar", layout = MainView.class)
 @CssImport("./styles/views/calendar/calendar-demo.css")
-public class CalendarDemo extends Div {
+public class CalendarDemo extends Div{
 
 	// componenti
 	private static final String[] COLORS = { "tomato", "orange", "dodgerblue", "mediumseagreen", "gray", "slateblue",
@@ -40,6 +41,7 @@ public class CalendarDemo extends Div {
 	private Button buttonDatePicker;
 	private HorizontalLayout toolbar;
 	private ComboBox<Timezone> timezoneComboBox;
+
 
 	public CalendarDemo() {
 		setClassName("container");
@@ -131,6 +133,7 @@ public class CalendarDemo extends Div {
 	}
 
 	private void createCalendarInstance() {
+		
 		calendar = FullCalendarBuilder.create().withAutoBrowserTimezone().withEntryLimit(3).withScheduler().build();
 
 		calendar.setClassName("calendar");
@@ -204,10 +207,13 @@ public class CalendarDemo extends Div {
 			// instanzio un dialog = form connesso alla cella selezionata
 			new CalendarDialog(calendar, entry, true).open();
 		});
-
+		
+		
+		
 		// aggiungo più entità rispetto al limite = 3
 		calendar.addLimitedEntriesClickedListener(event -> {
 			Collection<Entry> entries = calendar.getEntries(event.getClickedDate());
+			
 			if (!entries.isEmpty()) {
 				Dialog dialog = new Dialog();
 				VerticalLayout dialogLayout = new VerticalLayout();
@@ -228,25 +234,48 @@ public class CalendarDemo extends Div {
 					Icon dot = new Icon(VaadinIcon.CIRCLE);
 					dot.setId("dot");
 					
+					CalendarDialog calendarDialog = new CalendarDialog(calendar, (MyEntry) entry, false);
+					
+					//aggiungo alla form i vari le varie notification possibili, tutte chiudono il dialog di entries
+					calendarDialog.addListener(new WindowListener() {
+						
+						@Override
+						public void deleteNotification() {
+							dialog.close();
+						}
+						
+						@Override
+						public void confirmNotification() {
+							dialog.close();
+						}
+						
+						@Override
+						public void closeNotification() {
+							dialog.close();
+						}
+					});
+					
 					Button button = new Button(entry.getTitle(), dot, 
-							clickEvent -> new CalendarDialog(calendar, (MyEntry) entry, false).open());
+							clickEvent -> calendarDialog.open());
 					
 					Style style = button.getStyle();
 					button.setId("entry-btn");
 					dot.setColor(((MyEntry) entry).getColorDone());
-					dot.setSize("20px");
+					dot.setSize("18px");
 					style.set("background-color", Optional.ofNullable(entry.getColor()).orElse("rgb(58, 135, 173)"));
 					style.set("color", "white");
 					style.set("border-radius", "3px");
 					style.set("margin", "1px");
-
 					return button;
 				}).forEach(dialogLayout::add);
-
+			
 				dialog.add(dialogLayout);
 				dialog.open();
 			}
+	
 		});
+			
+			
 
 		calendar.addBrowserTimezoneObtainedListener(event -> {
 			System.out.println("Use browser's timezone: " + event.getTimezone().toString());
@@ -336,6 +365,7 @@ public class CalendarDemo extends Div {
 		createTimedBackgroundEntry(calendar, now.withDayOfMonth(20).atTime(11, 0), 150, "#FBC8FF",true);
 
 		createRecurringEvents(calendar);
+		
 	}
 
 	static void createRecurringEvents(FullCalendar calendar) {
@@ -360,7 +390,6 @@ public class CalendarDemo extends Div {
 			boolean done) {
 		MyEntry entry = new MyEntry();
 		setValues(calendar, entry, title, start.atStartOfDay(), days, ChronoUnit.DAYS, color, done);
-
 		entry.setEditable(true);
 		calendar.addEntry(entry);
 	}
@@ -380,7 +409,8 @@ public class CalendarDemo extends Div {
 		setValues(calendar, entry, "BG", start.atStartOfDay(), days, ChronoUnit.DAYS, color, done);
 
 		entry.setEditable(true);
-
+		
+		
 		calendar.addEntry(entry);
 	}
 

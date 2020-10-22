@@ -1,14 +1,22 @@
 package com.example.application.views.calendar;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.validation.constraints.NotNull;
 
 import org.vaadin.stefan.fullcalendar.Entry;
 import org.vaadin.stefan.fullcalendar.JsonUtils;
 import org.vaadin.stefan.fullcalendar.Resource;
+import org.vaadin.stefan.fullcalendar.Timezone;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.google.api.client.util.DateTime;
 
 import elemental.json.Json;
 import elemental.json.JsonObject;
@@ -19,7 +27,11 @@ public class MyEntry extends Entry {
 	
 	private String colorDone;
 
+	@JsonFormat(pattern="yyyy-MM-dd HH:mm:ss")
+	private LocalDateTime editDate = LocalDateTime.now();
 
+	private String eTag = UUID.randomUUID().toString();
+	
 	public boolean isDone() {
 		return done;
 	}
@@ -46,6 +58,23 @@ public class MyEntry extends Entry {
 		this.colorDone = colorDone;
 	}
 	
+	public LocalDateTime getEditDate() {
+		return editDate;
+	}
+
+	public void setEditDate(LocalDateTime editDate) {
+		this.editDate = editDate;
+	}
+
+	public String geteTag() {
+		return eTag;
+	}
+
+	public void seteTag(String eTag) {
+		this.eTag = eTag;
+	}
+
+
 	/**
      * Converts the content of this instance to json to be sent to the client.
      *
@@ -58,6 +87,8 @@ public class MyEntry extends Entry {
 		
         jsonObject.put("done", JsonUtils.toJsonValue(isDone()));
         jsonObject.put("colorDone", JsonUtils.toJsonValue(getColorDone()));
+        jsonObject.put("editDate", JsonUtils.toJsonValue(getEditDate()));
+        jsonObject.put("eTag", JsonUtils.toJsonValue(geteTag()));
         
         return jsonObject;
     }
@@ -68,7 +99,10 @@ public class MyEntry extends Entry {
 		super.update(object);
 		
         JsonUtils.updateBoolean(object, "done", this::setDone);
- //       JsonUtils.updateString(object, "colorDone", this::setColorDone);
+//        JsonUtils.updateDateTime(object, "editDate", this::setEditDate,null);
+        JsonUtils.updateString(object, "eTag", this::seteTag);
     
     }
+
+
 }

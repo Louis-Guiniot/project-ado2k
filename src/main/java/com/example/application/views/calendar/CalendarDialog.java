@@ -1,5 +1,6 @@
 package com.example.application.views.calendar;
 
+import com.google.api.client.util.DateTime;
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.button.ButtonVariant;
 import com.vaadin.flow.component.checkbox.Checkbox;
@@ -11,6 +12,7 @@ import com.vaadin.flow.component.datepicker.DatePicker;
 import com.vaadin.flow.component.dependency.CssImport;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.FlexComponent;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -24,7 +26,12 @@ import org.vaadin.stefan.fullcalendar.FullCalendar;
 import org.vaadin.stefan.fullcalendar.Timezone;
 
 import java.time.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 public class CalendarDialog extends Dialog {
 
@@ -34,6 +41,8 @@ public class CalendarDialog extends Dialog {
 	private final CustomDateTimePicker fieldStart;
 	private final CustomDateTimePicker fieldEnd;
 	private final CheckboxGroup<DayOfWeek> fieldRDays;
+	private LinkedList<WindowListener> listeners = new LinkedList<>();
+	private LinkedList<MyEntry> list = new LinkedList<MyEntry>();
 
 	public CalendarDialog(FullCalendar calendar, MyEntry entry, boolean newInstance) {
 		this.dialogEntry = DialogEntry.of(entry, calendar.getTimezone());
@@ -42,7 +51,6 @@ public class CalendarDialog extends Dialog {
 		setCloseOnOutsideClick(true);
 
 		setWidth("550px");
-		
 
 		// init fields
 
@@ -60,13 +68,12 @@ public class CalendarDialog extends Dialog {
 
 		fieldStart = new CustomDateTimePicker("Start");
 		fieldEnd = new CustomDateTimePicker("End");
-		
-		
+
 		boolean allDay = dialogEntry.allDay;
 		fieldStart.setDateOnly(allDay);
 		fieldEnd.setDateOnly(allDay);
 
-		//checkbox per scegliere se fatto o no
+		// checkbox per scegliere se fatto o no
 		Checkbox done = new Checkbox("done");
 
 		Span infoEnd = new Span(
@@ -93,10 +100,9 @@ public class CalendarDialog extends Dialog {
 		binder.forField(fieldTitle).asRequired().bind(DialogEntry::getTitle, DialogEntry::setTitle);
 		binder.forField(fieldStart).asRequired().bind(DialogEntry::getStart, DialogEntry::setStart);
 		binder.forField(fieldEnd).asRequired().bind(DialogEntry::getEnd, DialogEntry::setEnd);
-		
 
 		// optional fields
-		binder.bind(done,DialogEntry::isDone, DialogEntry::setDone);
+		binder.bind(done, DialogEntry::isDone, DialogEntry::setDone);
 		binder.bind(fieldColor, DialogEntry::getColor, DialogEntry::setColor);
 		binder.bind(fieldDescription, DialogEntry::getDescription, DialogEntry::setDescription);
 		binder.bind(fieldAllDay, DialogEntry::isAllDay, DialogEntry::setAllDay);
@@ -110,30 +116,58 @@ public class CalendarDialog extends Dialog {
 			if (binder.validate().isOk()) {
 				if (newInstance) {
 					calendar.addEntry(dialogEntry.updateEntry());
+
 				} else {
-					calendar.removeEntries(dialogEntry.getEntry());
+					calendar.removeEntry(dialogEntry.getEntry());
 					calendar.addEntry(dialogEntry.updateEntry());
-					
-					//alendar.updateEntry(dialogEntry.updateEntry());
+
+					// alendar.updateEntry(dialogEntry.updateEntry());
 				}
+
 			}
+			// chiudo il dialog entries se sono dentro
+
+			notifyConfirm();
 			close();
+			Notification.show("Entry stored successfully.");
+			
+			list.add(dialogEntry.getEntry());			
+			
+			//Controllo se la lista funziona
+			Iterator<MyEntry> iterator=list.iterator();
+			long count = 0;
+		     while(iterator.hasNext()){
+		       System.out.println(iterator.next());
+		       count++;
+		     }
+		     
+		     System.out.println("Size of the list : "+count);
 		});
+		
+		
+	
 		buttonSave.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
 
-		Button buttonCancel = new Button("Cancel", e -> close());
+		Button buttonCancel = new Button("Cancel", e -> {
+			// chiudo il dialog entries se sono dentro
+			notifyClose();
+			close();
+			Notification.show("Entry doesen't stored.");
+		});
+
 		buttonCancel.addThemeVariants(ButtonVariant.LUMO_TERTIARY);
 
 		HorizontalLayout buttons = new HorizontalLayout(buttonSave, buttonCancel);
-		
-		
+
 		if (!newInstance) {
 			Button buttonRemove = new Button("Remove", e -> {
 				calendar.removeEntry(entry);
+				// chiudo il dialog entries se sono dentro
+				notifyDelete();
 				close();
+				Notification.show("Entry eliminated.");
 			});
-			buttonRemove.addThemeVariants(ButtonVariant.LUMO_TERTIARY, ButtonVariant.LUMO_ERROR);
-			buttons.add(buttonRemove);	
+			buttons.add(buttonRemove);
 		}
 
 		// TODO add resource assignment widget
@@ -141,15 +175,13 @@ public class CalendarDialog extends Dialog {
 		// layouting
 
 		VerticalLayout mainLayout = new VerticalLayout(fieldTitle, fieldColor, fieldDescription,
-				new HorizontalLayout(fieldAllDay, fieldRecurring), fieldStart, fieldEnd, infoEnd, fieldRDays,done);
-		
-		
+				new HorizontalLayout(fieldAllDay, fieldRecurring), fieldStart, fieldEnd, infoEnd, fieldRDays, done);
+
 		mainLayout.setDefaultHorizontalComponentAlignment(FlexComponent.Alignment.STRETCH);
 		mainLayout.setSizeFull();
 		mainLayout.getStyle().set("padding", "15px");
-		
+
 		mainLayout.getElement().getStyle().set("overflow-y", "auto");
-		
 
 		buttons.getStyle().set("padding-left", "20px");
 		buttons.getStyle().set("margin-bottom", "20px");
@@ -229,6 +261,8 @@ public class CalendarDialog extends Dialog {
 		private Timezone timezone;
 		private MyEntry entry;
 		private String colorDone;
+		private LocalDateTime editDate;
+		private String eTag;
 
 		public String getId() {
 			return id;
@@ -327,13 +361,12 @@ public class CalendarDialog extends Dialog {
 		}
 
 		public String getColorDone() {
-			if(isDone()) {
-				colorDone ="green";
+			if (isDone()) {
+				colorDone = "green";
+			} else {
+				colorDone = "red";
 			}
-			else {
-				colorDone ="red";
-			}
-			
+
 			return colorDone;
 		}
 
@@ -341,11 +374,28 @@ public class CalendarDialog extends Dialog {
 			this.colorDone = colorDone;
 		}
 
+		public LocalDateTime getEditDate() {
+			return editDate;
+		}
+
+		public void setEditDate(LocalDateTime editDate) {
+			this.editDate = editDate;
+		}
+
+		public String geteTag() {
+			return eTag;
+		}
+
+		public void seteTag(String eTag) {
+			this.eTag = eTag;
+		}
+
 		public static DialogEntry of(MyEntry entry, Timezone timezone) {
 			DialogEntry dialogEntry = new DialogEntry();
 
 			dialogEntry.setTimezone(timezone);
-			dialogEntry.setEntry(entry);
+			
+
 
 			dialogEntry.setTitle(entry.getTitle());
 			dialogEntry.setColor(entry.getColor());
@@ -353,7 +403,11 @@ public class CalendarDialog extends Dialog {
 			dialogEntry.setAllDay(entry.isAllDay());
 			dialogEntry.setDone(entry.isDone());
 			dialogEntry.setColorDone(entry.getColorDone());
-
+			dialogEntry.setEditDate(entry.getEditDate());
+			dialogEntry.seteTag(entry.geteTag());
+			
+			dialogEntry.setEntry(entry);
+			
 			boolean recurring = entry.isRecurring();
 			dialogEntry.setRecurring(recurring);
 
@@ -383,6 +437,8 @@ public class CalendarDialog extends Dialog {
 			entry.setRecurring(recurring);
 			entry.setDone(done);
 			entry.setColorDone(colorDone);
+			entry.setEditDate(LocalDateTime.now());
+			entry.seteTag(UUID.randomUUID().toString());
 
 			if (recurring) {
 				entry.setRecurringDaysOfWeeks(getRecurringDays());
@@ -408,5 +464,28 @@ public class CalendarDialog extends Dialog {
 
 			return entry;
 		}
+	}
+
+	// creo metodi connessi all'interfaccia listener
+	private void notifyConfirm() {
+		for (WindowListener listener : listeners) {
+			listener.confirmNotification();
+		}
+	}
+
+	private void notifyClose() {
+		for (WindowListener listener : listeners) {
+			listener.closeNotification();
+		}
+	}
+
+	private void notifyDelete() {
+		for (WindowListener listener : listeners) {
+			listener.deleteNotification();
+		}
+	}
+
+	public void addListener(WindowListener listener) {
+		listeners.add(listener);
 	}
 }

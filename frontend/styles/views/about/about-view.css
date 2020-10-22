@@ -1,5 +1,4 @@
 #about-view { 
-    margin: 0 auto;
     padding: 3%;
 }
 
@@ -8,11 +7,20 @@
 	border-radius: var(--lumo-border-radius-l);
 	padding-left : 0;
 	padding-right: 0;
+	margin:auto;
 }
 
-#icon{
+.icon{
 	margin:auto;
 	color: white;
+}
+
+#vLogo{
+	margin-left:0;
+}
+
+#compressLogo{
+	margin-right:0;
 }
 
 #form {
